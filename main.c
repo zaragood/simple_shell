@@ -1,6 +1,11 @@
 #include "simple_shell.h"
 
+/**/
+char *lineptr = NULL;
 
+/**
+ *
+ */
 void sigintHandler(int sig)
 {
 	(void) sig;
@@ -8,6 +13,9 @@ void sigintHandler(int sig)
 	exit(0);
 }
 
+/**
+ *
+ */
 void get_user_input(void)
 {
 	size_t n = 0;
@@ -20,27 +28,37 @@ void get_user_input(void)
 		lineptr = NULL;
 		exit(1);
 	}
-
+	/*add comment*/
 	lineptr[nread - 1] = '\0';
 }
 
-char **mystrtok(const char *delim)
+/**
+ *
+ */
+char **my_strtok(const char *delim)
 {
-	char *token = NULL, *line = strdup(lineptr);
-	char **tokens = malloc(sizeof(char *) * 10);
+	char *token = NULL, *line;
+	char **tokens;
 	int i = 0;
 
+	/* add comment */
+	line = strdup(lineptr);
+
+	/* add comment */
+	tokens = malloc(sizeof(char *) * 10);
 	if (!tokens)
 	{
 		free(line), line = NULL;
 		return (NULL);
 	}
-
+	/**/
 	token = strtok(line, delim);
 	if (token == NULL)
 	{
-		free(line), line = NULL;
-		free(tokens), tokens = NULL;
+		free(line);
+		line = NULL;
+		free(tokens);
+		tokens = NULL;
 		return (NULL);
 	}
 
@@ -94,21 +112,34 @@ int main(int ac, char **av, char **environ)
 		}
 
 		get_user_input();
-		argv = mystrtok(" ");
+		argv = my_strtok(" ");
 
 		if (argv)
 		{
+			if (_strcmp(argv[0], "exit") == 0)
+			{
+				for (i = 0; argv[i]; i++)
+				{
+					free(argv[i]);
+					argv[i] = NULL;
+				}
+				free(argv), argv = NULL;
+				break;
+			}
+			/*add comment*/
 			myfork(argv, av, environ);
 			for (i = 0; argv[i]; i++)
 			{
-				free(argv[i]);
-				argv[i] = NULL;
+				free(argv[i]), argv[i] = NULL;
 			}
-			free(argv), argv = NULL;
+			free(argv);
+			argv = NULL;
 		}
-		free(lineptr), lineptr = NULL;
+		free(lineptr);
+		lineptr = NULL;
 	}
-	free(lineptr), lineptr = NULL;
+	free(lineptr);
+	lineptr = NULL;
 
 	return (0);
 }
