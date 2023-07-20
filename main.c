@@ -1,6 +1,12 @@
 #include "simple_shell.h"
 
-/**/
+/*
+ * File: simple_shell.c
+ * Description: A simple shell program that allows users to execute commands.
+ * Author: Goodness Azara and Precious Nwosu
+ * Date: July 19, 2023.
+ */
+
 char *lineptr = NULL;
 
 /**
