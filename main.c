@@ -10,7 +10,9 @@
 char *lineptr = NULL;
 
 /**
- * Signal handler for SIGINT (Ctrl+C).
+ * sigintHandler - Signal handler for SIGINT (Ctrl+C).
+ * @sig: The signal number received (unused).
+ *
  * Frees memory and exits the program when the signal is received.
  */
 void sigintHandler(int sig)
@@ -21,9 +23,10 @@ void sigintHandler(int sig)
 }
 
 /**
- * Reads user input from the command line.
+ * get_user_input - Reads user input from the command line.
  * Uses getline() to store the input in the lneptr variable.
- * Removes the newline character at the end and handles possible errors
+ * Removes the newline character at the end
+ * and handles possible errors
  */
 void get_user_input(void)
 {
@@ -42,9 +45,13 @@ void get_user_input(void)
 }
 
 /**
- * Custom implementation of strtok function to split the input line.
+ * my_strtok - Custom implementation of strtok function
+ * to split the input line.
+ * @delim: The delimiter to split the input line.
+ *
  * Splits the line stored in lineptr based on the given delimiter.
- * Returns an array of tokens (strings) obtained from the split operation.
+ * Return: An array of tokens (strings) obtained from
+ * the split operation.
  */
 char **my_strtok(const char *delim)
 {
@@ -87,8 +94,12 @@ char **my_strtok(const char *delim)
 }
 
 /**
- * Forks a child process and executes the specified command.
- * If the child process fails to execute the command, an error message is displayed.
+ * myfork - Forks a child process and executes the specified command.
+ * @argv: The argumennts to pass to the command.
+ * @av: The name of the program being executed (unused).
+ * @environ: The environment variables.
+ *
+ * Return: 1 (failure)
  */
 void myfork(char **argv, char **av, char **environ)
 {
@@ -111,18 +122,24 @@ void myfork(char **argv, char **av, char **environ)
 	}
 }
 
+/**
+ * main - Entry point of the simple shell program
+ *
+ * @ac: The number of arguments (unused).
+ * @av: The arguments (unused).
+ * @environ: The environment variables.
+ *
+ * Return: Always 0.
+ */
 int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	int i;
 	char **argv = NULL;
 	bool interactive = isatty(fileno(stdin));
-
 	(void) ac;
-
 	/* Set the signal handler for SIGINT (Ctrl+C) */
 	signal(SIGINT, sigintHandler);
-
 	while (1)
 	{
 		if (interactive)
@@ -131,40 +148,29 @@ int main(int ac, char **av, char **environ)
 			while (prompt[i])
 				_putchar(prompt[i++]);
 		}
-
 		get_user_input();
 		argv = my_strtok(" ");
-
 		if (argv)
 		{
 			if (_strcmp(argv[0], "exit") == 0)
 			{
 				for (i = 0; argv[i]; i++)
 				{
-					free(argv[i]);
-					argv[i] = NULL;
+					free(argv[i]), argv[i] = NULL;
 				}
 				free(argv), argv = NULL;
 				break;
 			}
 			/* Execute the entered command */
 			myfork(argv, av, environ);
-
 			/* Free memory allocated for the arguments */
 			for (i = 0; argv[i]; i++)
-			{
 				free(argv[i]), argv[i] = NULL;
-			}
-			free(argv);
-			argv = NULL;
+			free(argv), argv = NULL;
 		}
 		/* Free memory allocated for the user input */
-		free(lineptr);
-		lineptr = NULL;
+		free(lineptr), lineptr = NULL;
 	}
-	/* Free memory allocated for lineptr before exiting the program */
-	free(lineptr);
-	lineptr = NULL;
-
+	free(lineptr), lineptr = NULL;
 	return (0);
 }
