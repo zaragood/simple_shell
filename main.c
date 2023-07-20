@@ -138,7 +138,7 @@ int main(int ac, char **av, char **environ)
 	char **argv = NULL;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
-	/* Set the signal handler for SIGINT (Ctrl+C) */
+	/* Set the signal handler for SIGINT */
 	signal(SIGINT, sigintHandler);
 	while (1)
 	{
