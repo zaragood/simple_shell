@@ -4,7 +4,8 @@
 char *lineptr = NULL;
 
 /**
- *
+ * Signal handler for SIGINT (Ctrl+C).
+ * Frees memory and exits the program when the signal is received.
  */
 void sigintHandler(int sig)
 {
@@ -14,7 +15,9 @@ void sigintHandler(int sig)
 }
 
 /**
- *
+ * Reads user input from the command line.
+ * Uses getline() to store the input in the lneptr variable.
+ * Removes the newline character at the end and handles possible errors
  */
 void get_user_input(void)
 {
@@ -28,12 +31,14 @@ void get_user_input(void)
 		lineptr = NULL;
 		exit(1);
 	}
-	/*add comment*/
+	/* Removes the newline character from the end of the input */
 	lineptr[nread - 1] = '\0';
 }
 
 /**
- *
+ * Custom implementation of strtok function to split the input line.
+ * Splits the line stored in lineptr based on the given delimiter.
+ * Returns an array of tokens (strings) obtained from the split operation.
  */
 char **my_strtok(const char *delim)
 {
@@ -41,17 +46,17 @@ char **my_strtok(const char *delim)
 	char **tokens;
 	int i = 0;
 
-	/* add comment */
+	/* Duplicate the line stored in lineptr */
 	line = strdup(lineptr);
 
-	/* add comment */
+	/* Allocate memory for the array of tokens */
 	tokens = malloc(sizeof(char *) * 10);
 	if (!tokens)
 	{
 		free(line), line = NULL;
 		return (NULL);
 	}
-	/**/
+	/* Split the line into tokens using strtok */
 	token = strtok(line, delim);
 	if (token == NULL)
 	{
@@ -64,6 +69,7 @@ char **my_strtok(const char *delim)
 
 	while (token)
 	{
+		/* Duplicate the token and store it in the tokens array */
 		tokens[i] = strdup(token);
 		token = strtok(NULL, delim);
 		i++;
@@ -74,6 +80,10 @@ char **my_strtok(const char *delim)
 	return (tokens);
 }
 
+/**
+ * Forks a child process and executes the specified command.
+ * If the child process fails to execute the command, an error message is displayed.
+ */
 void myfork(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
@@ -84,11 +94,15 @@ void myfork(char **argv, char **av, char **environ)
 		return;
 	else if (child_pid == 0)
 	{
+		/* Child process: Execute the command using execve */
 		if (execve(argv[0], argv, environ) == -1)
 			perror(av[0]);
 	}
 	else
+	{
+		/* Parent process: Wait for the child process to finish */
 		wait(&status);
+	}
 }
 
 int main(int ac, char **av, char **environ)
@@ -100,6 +114,7 @@ int main(int ac, char **av, char **environ)
 
 	(void) ac;
 
+	/* Set the signal handler for SIGINT (Ctrl+C) */
 	signal(SIGINT, sigintHandler);
 
 	while (1)
@@ -126,8 +141,10 @@ int main(int ac, char **av, char **environ)
 				free(argv), argv = NULL;
 				break;
 			}
-			/*add comment*/
+			/* Execute the entered command */
 			myfork(argv, av, environ);
+
+			/* Free memory allocated for the arguments */
 			for (i = 0; argv[i]; i++)
 			{
 				free(argv[i]), argv[i] = NULL;
@@ -135,9 +152,11 @@ int main(int ac, char **av, char **environ)
 			free(argv);
 			argv = NULL;
 		}
+		/* Free memory allocated for the user input */
 		free(lineptr);
 		lineptr = NULL;
 	}
+	/* Free memory allocated for lineptr before exiting the program */
 	free(lineptr);
 	lineptr = NULL;
 
