@@ -53,33 +53,29 @@ void get_user_input(void)
  * Return: An array of tokens (strings) obtained from
  * the split operation.
  */
-char **my_strtok(const char *delim)
+char **my_strtok(const char *delim, char *buffer)
 {
 	char *token = NULL, *line;
 	char **tokens;
 	int i = 0;
 
 	/* Duplicate the line stored in lineptr */
-	line = strdup(lineptr);
+	line = strdup(buffer);
 
 	/* Allocate memory for the array of tokens */
-	tokens = malloc(sizeof(char *) * 10);
+	tokens = malloc(sizeof(char *) * 1024);
 	if (!tokens)
 	{
-		free(line), line = NULL;
 		return (NULL);
 	}
 	/* Split the line into tokens using strtok */
 	token = strtok(line, delim);
 	if (token == NULL)
 	{
-		free(line);
-		line = NULL;
-		free(tokens);
-		tokens = NULL;
+		free(line), line = NULL;
+		free(tokens), tokens = NULL;
 		return (NULL);
 	}
-
 	while (token)
 	{
 		/* Duplicate the token and store it in the tokens array */
@@ -87,10 +83,57 @@ char **my_strtok(const char *delim)
 		token = strtok(NULL, delim);
 		i++;
 	}
-
 	tokens[i] = NULL;
 	free(line), line = NULL;
 	return (tokens);
+}
+
+/**
+ * _which - Blaaaaah
+ * @env: add comment
+ * @command: add comment
+ * Return: add comment
+ */
+char *_which(char **env, char *command)
+{
+	unsigned int i = 0, j;
+	char **paths = NULL, *buffer = NULL;
+	size_t length = 0;
+	struct stat statbuf;
+
+	while (env[i] != NULL)
+	{
+		if (strncmp(env[i], "PATH=", 5) == 0)
+			break;
+		i++;
+	}
+	paths = my_strtok(":=", env[i]);
+	
+	if (paths)
+	{
+		for (i = 1; paths[i]; i++)
+		{
+			length = strlen(paths[i]) + strlen(command) + 2;
+			buffer = malloc(length);
+			if (buffer)
+			{
+				for (length = 0; length < strlen(paths[i]); length++)
+					buffer[length] = paths[i][length];
+
+				buffer[length++] = '/';
+				
+				for (j = 0; j < strlen(command); length++, j++)
+					buffer[length] = command[j];
+				
+				buffer[length] = '\0';
+
+				if (stat(buffer, &statbuf) == 0)
+					return (buffer);
+			}
+			free(buffer);
+		}
+	}
+	return (buffer);
 }
 
 /**
@@ -105,12 +148,15 @@ void myfork(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
 	int status;
+	struct stat statbuf;
 
 	child_pid = fork();
 	if (child_pid == -1)
 		return;
 	else if (child_pid == 0)
-	{
+	{	/*add comment*/
+		if (stat(argv[0], &statbuf) != 0)
+			argv[0] = _which(environ, argv[0]);
 		/* Child process: Execute the command using execve */
 		if (execve(argv[0], argv, environ) == -1)
 			perror(av[0]);
@@ -149,8 +195,8 @@ int main(int ac, char **av, char **environ)
 				_putchar(prompt[i++]);
 		}
 		get_user_input();
-		argv = my_strtok(" ");
-		if (argv)
+		argv = my_strtok(" ", lineptr);
+		if (argv != NULL)
 		{
 			if (_strcmp(argv[0], "exit") == 0)
 			{
