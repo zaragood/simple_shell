@@ -8,18 +8,16 @@
  * Date: July 19, 2023.
  */
 
-char *lineptr = NULL;
-
 /**
  * sigintHandler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
- *
+ * @lineptr: A pointer to the line buffer (unused).
  * Frees memory and exits the program when the signal is received.
  */
-void sigintHandler(int sig)
+void sigintHandler(int sig, char **lineptr)
 {
 	(void) sig;
-	free(lineptr), lineptr = NULL;
+	free(*lineptr), *lineptr = NULL;
 	exit(0);
 }
 
@@ -28,21 +26,22 @@ void sigintHandler(int sig)
  * Uses getline() to store the input in the lneptr variable.
  * Removes the newline character at the end
  * and handles possible errors
+ * @lineptr: A pointer to a pointer to a character to store the user input.
  */
-void get_user_input(void)
+void get_user_input(char **lineptr)
 {
 	size_t n = 0;
 	ssize_t nread;
 
-	nread = getline(&lineptr, &n, stdin);
+	nread = getline(lineptr, &n, stdin);
 	if (nread == -1)
 	{
-		free(lineptr);
-		lineptr = NULL;
+		free(*lineptr);
+		*lineptr = NULL;
 		exit(1);
 	}
 	/* Removes the newline character from the end of the input */
-	lineptr[nread - 1] = '\0';
+	(*lineptr)[nread - 1] = '\0';
 }
 
 /**
@@ -130,7 +129,6 @@ void myfork(char **argv, char **av, char **environ)
 
 /**
  * main - Entry point of the simple shell program
- *
  * @ac: The number of arguments (unused).
  * @av: The arguments (unused).
  * @environ: The environment variables.
@@ -143,9 +141,17 @@ int main(int ac, char **av, char **environ)
 	int i;
 	char **argv = NULL;
 	bool interactive = isatty(fileno(stdin));
+	char *lineptr = NULL;
 	(void) ac;
-	/* Set the signal handler for SIGINT */
-	signal(SIGINT, sigintHandler);
+/**
+ * sigint_wrapper - Wrapper function for the SIGINT signal handler.
+ * @sig: The signal number received (unused).
+ */
+	void sigint_wrapper(int sig)
+	{
+		sigintHandler(sig, &lineptr);
+	}
+	signal(SIGINT, sigint_wrapper);
 	while (1)
 	{
 		if (interactive)
@@ -154,27 +160,22 @@ int main(int ac, char **av, char **environ)
 			while (prompt[i])
 				_putchar(prompt[i++]);
 		}
-		get_user_input();
+		get_user_input(&lineptr);
 		argv = my_strtok(" ", lineptr);
 		if (argv != NULL)
 		{
 			if (_strcmp(argv[0], "exit") == 0)
 			{
 				for (i = 0; argv[i]; i++)
-				{
 					free(argv[i]), argv[i] = NULL;
-				}
 				free(argv), argv = NULL;
 				break;
 			}
-			/* Execute the entered command */
 			myfork(argv, av, environ);
-			/* Free memory allocated for the arguments */
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
 			free(argv), argv = NULL;
 		}
-		/* Free memory allocated for the user input */
 		free(lineptr), lineptr = NULL;
 	}
 	free(lineptr), lineptr = NULL;

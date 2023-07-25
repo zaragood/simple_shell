@@ -11,9 +11,10 @@
 #include <stdbool.h>
 #include <signal.h>
 
-
-extern char *lineptr;
+void get_user_input(char **lineptr);
+void sigint_wrapper(int sig);
 char **my_strtok(const char *delim, char *buffer);
 int _putchar(char c);
 int _strcmp(char *s1, char *s2);
+
 #endif /*_SIMPLE_SHELL_H*/
