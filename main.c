@@ -48,6 +48,7 @@ void get_user_input(void)
  * my_strtok - Custom implementation of strtok function
  * to split the input line.
  * @delim: The delimiter to split the input line.
+ * @buffer: The input line to be tokenized.
  *
  * Splits the line stored in lineptr based on the given delimiter.
  * Return: An array of tokens (strings) obtained from
@@ -89,10 +90,12 @@ char **my_strtok(const char *delim, char *buffer)
 }
 
 /**
- * _which - Blaaaaah
- * @env: add comment
- * @command: add comment
- * Return: add comment
+ * _which - Locates the executable path of a given command.
+ * @env: An array of string containing environemt variables.
+ * @command: The command whose executable path needs to be located.
+ * Return: On success, returns a pointer to a string containing
+ * the full path to the command. If the command is not found,
+ * returns NULL.
  */
 char *_which(char **env, char *command)
 {
@@ -100,7 +103,7 @@ char *_which(char **env, char *command)
 	char **paths = NULL, *buffer = NULL;
 	size_t length = 0;
 	struct stat statbuf;
-
+	/* Find the 'PATH' environment variable in the provided 'env' */
 	while (env[i] != NULL)
 	{
 		if (strncmp(env[i], "PATH=", 5) == 0)
@@ -108,7 +111,7 @@ char *_which(char **env, char *command)
 		i++;
 	}
 	paths = my_strtok(":=", env[i]);
-	
+
 	if (paths)
 	{
 		for (i = 1; paths[i]; i++)
@@ -117,14 +120,15 @@ char *_which(char **env, char *command)
 			buffer = malloc(length);
 			if (buffer)
 			{
+				/* Copy the directory path to the buffer */
 				for (length = 0; length < strlen(paths[i]); length++)
 					buffer[length] = paths[i][length];
-
+				/* Append '/' to the buffer */
 				buffer[length++] = '/';
-				
+
 				for (j = 0; j < strlen(command); length++, j++)
 					buffer[length] = command[j];
-				
+
 				buffer[length] = '\0';
 
 				if (stat(buffer, &statbuf) == 0)
@@ -154,7 +158,7 @@ void myfork(char **argv, char **av, char **environ)
 	if (child_pid == -1)
 		return;
 	else if (child_pid == 0)
-	{	/*add comment*/
+	{	/* Child process: Search for the executable in 'PATH' if necessary */
 		if (stat(argv[0], &statbuf) != 0)
 			argv[0] = _which(environ, argv[0]);
 		/* Child process: Execute the command using execve */
