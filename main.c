@@ -132,16 +132,13 @@ void myfork(char **argv, char **av, char **environ)
  * @ac: The number of arguments (unused).
  * @av: The arguments (unused).
  * @environ: The environment variables.
- *
  * Return: Always 0.
  */
 int main(int ac, char **av, char **environ)
 {
-	char *prompt = "#simple_shell$ ";
+	char *prompt = "#simple_shell$ ", **argv = NULL, *lineptr = NULL;
 	int i;
-	char **argv = NULL;
 	bool interactive = isatty(fileno(stdin));
-	char *lineptr = NULL;
 	(void) ac;
 /**
  * sigint_wrapper - Wrapper function for the SIGINT signal handler.
@@ -156,9 +153,8 @@ int main(int ac, char **av, char **environ)
 	{
 		if (interactive)
 		{
-			i = 0;
-			while (prompt[i])
-				_putchar(prompt[i++]);
+			for (i = 0; prompt[i]; _putchar(prompt[i++]))
+				;
 		}
 		get_user_input(&lineptr);
 		argv = my_strtok(" ", lineptr);
