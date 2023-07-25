@@ -13,6 +13,7 @@
 
 
 extern char *lineptr;
+char **my_strtok(const char *delim, char *buffer);
 int _putchar(char c);
 int _strcmp(char *s1, char *s2);
 #endif /*_SIMPLE_SHELL_H*/
