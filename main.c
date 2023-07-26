@@ -6,23 +6,17 @@
  * Author: Goodness Azara and Precious Nwosu
  * Date: July 19, 2023.
  */
-/**
- * _strcmp - function that compares two strings
- * @s1: parameter 1
- * @s2: parameter 2
- * Return: always 0
- */
 
 /**
- * sigintHandler - Signal handler for SIGINT (Ctrl+C).
+ * sigint_handler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
- * @lineptr: A pointer to the line buffer (unused).
  * Frees memory and exits the program when the signal is received.
  */
 void sigint_handler(int sig)
 {
 	(void) sig;
-	free(lineptr), lineptr = NULL;
+	free(lineptr),
+	lineptr = NULL;
 	exit(0);
 }
 
@@ -31,7 +25,6 @@ void sigint_handler(int sig)
  * Uses getline() to store the input in the lneptr variable.
  * Removes the newline character at the end
  * and handles possible errors
- * @lineptr: A pointer to a pointer to a character to store the user input.
  */
 void get_user_input(void)
 {
@@ -61,37 +54,37 @@ void get_user_input(void)
  */
 char **my_strtok(const char *delim, char *buffer)
 {
-        char *token = NULL, *line;
-        char **tokens;
-        int i = 0;
+	char *token = NULL, *line;
+	char **tokens;
+	int i = 0;
 
-        /* Duplicate the line stored in lineptr */
-        line = strdup(buffer);
+	/* Duplicate the line stored in lineptr */
+	line = strdup(buffer);
 
-        /* Allocate memory for the array of tokens */
-        tokens = malloc(sizeof(char *) * 1024);
-        if (!tokens)
-        {
-                return (NULL);
-        }
-        /* Split the line into tokens using strtok */
-        token = strtok(line, delim);
-        if (token == NULL)
-        {
-                free(line), line = NULL;
-                free(tokens), tokens = NULL;
+	/* Allocate memory for the array of tokens */
+	tokens = malloc(sizeof(char *) * 1024);
+	if (!tokens)
+	{
 		return (NULL);
-        }
-        while (token)
-        {
-                /* Duplicate the token and store it in the tokens array */
-                tokens[i] = strdup(token);
-                token = strtok(NULL, delim);
-                i++;
-        }
-        tokens[i] = NULL;
-        free(line), line = NULL;
-        return (tokens);
+	}
+	/* Split the line into tokens using strtok */
+	token = strtok(line, delim);
+	if (token == NULL)
+	{
+		free(line), line = NULL;
+		free(tokens), tokens = NULL;
+		return (NULL);
+	}
+	while (token)
+	{
+		/* Duplicate the token and store it in the tokens array */
+		tokens[i] = strdup(token);
+		token = strtok(NULL, delim);
+		i++;
+	}
+	tokens[i] = NULL;
+	free(line), line = NULL;
+	return (tokens);
 }
 /**
  * _which - Locates the executable path of a given command.
@@ -136,10 +129,14 @@ char *_which(char **env, char *command)
 				buffer[length] = '\0';
 
 				if (stat(buffer, &statbuf) == 0)
+				{
+					free(paths);
 					return (buffer);
+				}
 			}
 			free(buffer);
 		}
+		free(paths);
 	}
 	return (buffer);
 }
@@ -156,6 +153,7 @@ void myfork(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
 	int status;
+	char *path = NULL;
 	struct stat statbuf;
 
 	child_pid = fork();
@@ -166,7 +164,12 @@ void myfork(char **argv, char **av, char **environ)
 	else if (child_pid == 0)
 	{	/* Child process: Search for the executable in 'PATH' if necessary */
 		if (stat(argv[0], &statbuf) != 0)
-			argv[0] = _which(environ, argv[0]);
+			path = _which(environ, argv[0]);
+		if (path)
+		{
+			free(argv[0]);
+			argv[0] = path;
+		}
 		/* Child process: Execute the command using execve */
 		if (execve(argv[0], argv, environ) == -1)
 			perror(av[0]);
@@ -188,7 +191,7 @@ void myfork(char **argv, char **av, char **environ)
 int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
-       	char **argv = NULL;
+	char **argv = NULL;
 	int i;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
@@ -208,6 +211,7 @@ int main(int ac, char **av, char **environ)
 		{
 			if (strcmp(argv[0], "exit") == 0)
 			{
+				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
 				free(argv), argv = NULL;
@@ -220,6 +224,5 @@ int main(int ac, char **av, char **environ)
 		}
 		free(lineptr), lineptr = NULL;
 	}
-	free(lineptr), lineptr = NULL;
 	return (0);
 }
