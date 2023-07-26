@@ -1,11 +1,16 @@
 #include "simple_shell.h"
-#include "my_strtok.h"
 
 /*
  * File: simple_shell.c
  * Description: A simple shell program that allows users to execute commands.
  * Author: Goodness Azara and Precious Nwosu
  * Date: July 19, 2023.
+ */
+/**
+ * _strcmp - function that compares two strings
+ * @s1: parameter 1
+ * @s2: parameter 2
+ * Return: always 0
  */
 
 /**
@@ -14,10 +19,10 @@
  * @lineptr: A pointer to the line buffer (unused).
  * Frees memory and exits the program when the signal is received.
  */
-void sigintHandler(int sig, char **lineptr)
+void sigint_handler(int sig)
 {
 	(void) sig;
-	free(*lineptr), *lineptr = NULL;
+	free(lineptr), lineptr = NULL;
 	exit(0);
 }
 
@@ -28,22 +33,66 @@ void sigintHandler(int sig, char **lineptr)
  * and handles possible errors
  * @lineptr: A pointer to a pointer to a character to store the user input.
  */
-void get_user_input(char **lineptr)
+void get_user_input(void)
 {
 	size_t n = 0;
 	ssize_t nread;
 
-	nread = getline(lineptr, &n, stdin);
+	nread = getline(&lineptr, &n, stdin);
 	if (nread == -1)
 	{
-		free(*lineptr);
-		*lineptr = NULL;
+		free(lineptr);
+		lineptr = NULL;
 		exit(1);
 	}
 	/* Removes the newline character from the end of the input */
-	(*lineptr)[nread - 1] = '\0';
+	lineptr[nread - 1] = '\0';
 }
 
+/**
+ * my_strtok - Custom implementation of strtok function
+ * to split the input line.
+ * @delim: The delimiter to split the input line.
+ * @buffer: The input line to be tokenized.
+ *
+ * Splits the line stored in lineptr based on the given delimiter.
+ * Return: An array of tokens (strings) obtained from
+ * the split operation.
+ */
+char **my_strtok(const char *delim, char *buffer)
+{
+        char *token = NULL, *line;
+        char **tokens;
+        int i = 0;
+
+        /* Duplicate the line stored in lineptr */
+        line = strdup(buffer);
+
+        /* Allocate memory for the array of tokens */
+        tokens = malloc(sizeof(char *) * 1024);
+        if (!tokens)
+        {
+                return (NULL);
+        }
+        /* Split the line into tokens using strtok */
+        token = strtok(line, delim);
+        if (token == NULL)
+        {
+                free(line), line = NULL;
+                free(tokens), tokens = NULL;
+		return (NULL);
+        }
+        while (token)
+        {
+                /* Duplicate the token and store it in the tokens array */
+                tokens[i] = strdup(token);
+                token = strtok(NULL, delim);
+                i++;
+        }
+        tokens[i] = NULL;
+        free(line), line = NULL;
+        return (tokens);
+}
 /**
  * _which - Locates the executable path of a given command.
  * @env: An array of string containing environemt variables.
@@ -111,7 +160,9 @@ void myfork(char **argv, char **av, char **environ)
 
 	child_pid = fork();
 	if (child_pid == -1)
+	{
 		return;
+	}
 	else if (child_pid == 0)
 	{	/* Child process: Search for the executable in 'PATH' if necessary */
 		if (stat(argv[0], &statbuf) != 0)
@@ -136,31 +187,26 @@ void myfork(char **argv, char **av, char **environ)
  */
 int main(int ac, char **av, char **environ)
 {
-	char *prompt = "#simple_shell$ ", **argv = NULL, *lineptr = NULL;
+	char *prompt = "#simple_shell$ ";
+       	char **argv = NULL;
 	int i;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
-/**
- * sigint_wrapper - Wrapper function for the SIGINT signal handler.
- * @sig: The signal number received (unused).
- */
-	void sigint_wrapper(int sig)
-	{
-		sigintHandler(sig, &lineptr);
-	}
-	signal(SIGINT, sigint_wrapper);
+
+	signal(SIGINT, sigint_handler);
 	while (1)
 	{
 		if (interactive)
 		{
-			for (i = 0; prompt[i]; _putchar(prompt[i++]))
-				;
+			i = 0;
+			while (prompt[i])
+				_putchar(prompt[i++]);
 		}
-		get_user_input(&lineptr);
+		get_user_input();
 		argv = my_strtok(" ", lineptr);
 		if (argv != NULL)
 		{
-			if (_strcmp(argv[0], "exit") == 0)
+			if (strcmp(argv[0], "exit") == 0)
 			{
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
