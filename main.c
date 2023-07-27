@@ -6,7 +6,12 @@
  * Author: Goodness Azara and Precious Nwosu
  * Date: July 19, 2023.
  */
-
+void sigint_handler(int sig);
+void get_user_input(void);
+char **my_strtok(const char *delim, char *buffer);
+int is_valid_command(const char *command);
+char *_which(char **env, char *command);
+void myfork(char **argv, char **av, char **environ);
 /**
  * sigint_handler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
@@ -101,6 +106,10 @@ char *_which(char **env, char *command)
 	size_t length = 0;
 	struct stat statbuf;
 	/* Find the 'PATH' environment variable in the provided 'env' */
+	if (!is_valid_command(command))
+	{
+		return (NULL);
+	}
 	while (env[i] != NULL)
 	{
 		if (strncmp(env[i], "PATH=", 5) == 0)
@@ -142,6 +151,21 @@ char *_which(char **env, char *command)
 }
 
 /**
+ * is_valid_command - Function to check if the command is valid 
+ * does not contain control characters
+ * @command: command to be checked if it is valide or not
+ */
+int is_valid_command(const char *command)
+{
+	while (*command)
+	{
+		if (iscntrl(*command))
+			return (0);
+		command++;
+	}
+	return (1);
+}
+/**
  * myfork - Forks a child process and executes the specified command.
  * @argv: The argumennts to pass to the command.
  * @av: The name of the program being executed (unused).
@@ -164,7 +188,13 @@ void myfork(char **argv, char **av, char **environ)
 	else if (child_pid == 0)
 	{	/* Child process: Search for the executable in 'PATH' if necessary */
 		if (stat(argv[0], &statbuf) != 0)
+		{
 			path = _which(environ, argv[0]);
+			if (!path)
+			{
+				free(path);
+			}
+		}
 		if (path)
 		{
 			free(argv[0]);
@@ -173,6 +203,7 @@ void myfork(char **argv, char **av, char **environ)
 		/* Child process: Execute the command using execve */
 		if (execve(argv[0], argv, environ) == -1)
 			perror(av[0]);
+		free(path);
 	}
 	else
 	{
@@ -196,6 +227,7 @@ int main(int ac, char **av, char **environ)
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
+	signal(SIGINT, SIG_IGN);
 	signal(SIGINT, sigint_handler);
 	while (1)
 	{
