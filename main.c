@@ -11,7 +11,7 @@ void get_user_input(void);
 char **my_strtok(const char *delim, char *buffer);
 int is_valid_command(const char *command);
 char *_which(char **env, char *command);
-int myfork(char **argv, char **av, char **environ);
+void myfork(char **argv, char **av, char **environ);
 /**
  * sigint_handler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
@@ -41,7 +41,7 @@ void get_user_input(void)
 	{
 		free(lineptr);
 		lineptr = NULL;
-		exit(1);
+		/*exit(1);*/
 	}
 	/* Removes the newline character from the end of the input */
 	lineptr[nread - 1] = '\0';
@@ -153,6 +153,7 @@ char *_which(char **env, char *command)
 			free(paths[i]);
 		free(paths), paths = NULL;
 	}
+	free(lineptr);
 	return (NULL);
 }
 
@@ -180,7 +181,48 @@ int is_valid_command(const char *command)
  *
  * Return: 1 (failure)
  */
-int myfork(char **argv, char **av, char **environ)
+void myfork(char **argv, char **av, char **environ)
+{
+        pid_t child_pid;
+        int status;
+        char *path = NULL;
+        struct stat statbuf;
+
+        child_pid = fork();
+        if (child_pid == -1)
+        {
+                return;
+        }
+        else if (child_pid == 0)
+        {       /* Child process: Search for the executable in 'PATH' if necessary */
+                if (stat(argv[0], &statbuf) != 0)
+                {
+                        path = _which(environ, argv[0]);
+                        if (!path)
+                        {
+				return;
+                        }
+                }
+                if (path)
+                {
+                        free(argv[0]);
+                        argv[0] = path;
+                }
+                /* Child process: Execute the command using execve */
+                if (execve(argv[0], argv, environ) == -1)
+                {
+                        perror(av[0]);
+                }
+        }
+        else
+        {
+                /* Parent process: Wait for the child process to finish */
+                wait(&status);
+        }
+}
+
+
+int myforkk(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
 	int status;
@@ -237,15 +279,15 @@ int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	char **argv = NULL;
-	int i, status = 0, command_status;
+	int i, status = 0;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
-	signal(SIGINT, SIG_IGN);
+	/*signal(SIGINT, SIG_IGN);*/
 	signal(SIGINT, sigint_handler);
 	while (1)
 	{
-		status = 0;
+		/*status = 0;*/
 		if (interactive)
 		{
 			i = 0;
@@ -253,30 +295,32 @@ int main(int ac, char **av, char **environ)
 				_putchar(prompt[i++]);
 		}
 		get_user_input();
+		if (lineptr)
+		{
 		argv = my_strtok(" ", lineptr);
 		if (argv != NULL)
 		{
-			if (strcmp(argv[0], "exit") == 0)
+			/*if (strcmp(argv[0], "exit") == 0)
 			{
 				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
 				free(argv), argv = NULL;
-				/*When the user enters "exit" as a command, the shell should exit*/
-				/*with a return status of 0 to indicate successful termination*/
 				status = 0;
 				break;
-			}
-			command_status = myfork(argv, av, environ);
+			}*/
+			/*command_status = myfork(argv, av, environ);
 			if (command_status != 0)
 			{
 				status = command_status;
-			}
+			}*/
+			myfork(argv, av, environ);
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
 			free(argv), argv = NULL;
 		}
 		free(lineptr), lineptr = NULL;
+		}
 	}
 	return (status);
 }
