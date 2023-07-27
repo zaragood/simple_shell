@@ -41,7 +41,7 @@ void get_user_input(void)
 	{
 		free(lineptr);
 		lineptr = NULL;
-		/*exit(1);*/
+		exit(0);
 	}
 	/* Removes the newline character from the end of the input */
 	lineptr[nread - 1] = '\0';
@@ -220,53 +220,6 @@ void myfork(char **argv, char **av, char **environ)
         }
 }
 
-
-int myforkk(char **argv, char **av, char **environ)
-{
-	pid_t child_pid;
-	int status;
-	char *path = NULL;
-	struct stat statbuf;
-
-	child_pid = fork();
-	if (child_pid == -1)
-	{
-		return (1);
-	}
-	else if (child_pid == 0)
-	{	/* Child process: Search for the executable in 'PATH' if necessary */
-		if (stat(argv[0], &statbuf) != 0)
-		{
-			path = _which(environ, argv[0]);
-			if (!path)
-			{
-				free(path);
-				/*Return 127 if the command is not found*/
-				exit(127);
-			}
-		}
-		if (path)
-		{
-			free(argv[0]);
-			argv[0] = path;
-		}
-		/* Child process: Execute the command using execve */
-		if (execve(argv[0], argv, environ) == -1)
-		{
-			perror(av[0]);
-			exit(126);
-		}
-		free(path);
-	}
-	else
-	{
-		/* Parent process: Wait for the child process to finish */
-		wait(&status);
-		return (WEXITSTATUS(status));
-	}
-	return (0);
-}
-
 /**
  * main - Entry point of the simple shell program
  * @ac: The number of arguments (unused).
@@ -320,8 +273,9 @@ int main(int ac, char **av, char **environ)
 		}
 		free(lineptr), lineptr = NULL;
 		}
-		if (!interactive)
-			break;
+		/*if (!interactive)
+			break;*/
 	}
+	free(lineptr), lineptr = NULL;
 	return (0);
 }
