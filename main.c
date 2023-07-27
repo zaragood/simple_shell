@@ -153,7 +153,6 @@ char *_which(char **env, char *command)
 			free(paths[i]);
 		free(paths), paths = NULL;
 	}
-	free(lineptr);
 	return (NULL);
 }
 
@@ -279,7 +278,7 @@ int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	char **argv = NULL;
-	int i, status = 0;
+	int i;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
@@ -321,6 +320,8 @@ int main(int ac, char **av, char **environ)
 		}
 		free(lineptr), lineptr = NULL;
 		}
+		if (!interactive)
+			break;
 	}
-	return (status);
+	return (0);
 }
