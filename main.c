@@ -70,6 +70,7 @@ char **my_strtok(const char *delim, char *buffer)
 	tokens = malloc(sizeof(char *) * 1024);
 	if (!tokens)
 	{
+		free(line), line = NULL;
 		return (NULL);
 	}
 	/* Split the line into tokens using strtok */
@@ -139,22 +140,23 @@ char *_which(char **env, char *command)
 
 				if (stat(buffer, &statbuf) == 0)
 				{
-					free(paths);
+					free(paths), paths = NULL;
 					return (buffer);
 				}
+				free(buffer);
+				buffer = NULL;
 			}
-			free(buffer);
 		}
-		free(paths);
+		free(paths), paths = NULL;
 	}
-	return (buffer);
+	return (NULL);
 }
 
 /**
  * is_valid_command - Function to check if the command is valid 
  * does not contain control characters
  * @command: command to be checked if it is valide or not
- */
+*/ 
 int is_valid_command(const char *command)
 {
 	while (*command)
