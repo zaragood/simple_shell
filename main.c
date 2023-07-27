@@ -157,10 +157,11 @@ char *_which(char **env, char *command)
 }
 
 /**
- * is_valid_command - Function to check if the command is valid 
+ * is_valid_command - Function to check if the command is valid
  * does not contain control characters
  * @command: command to be checked if it is valide or not
-*/ 
+ * Return: 1
+*/
 int is_valid_command(const char *command)
 {
 	while (*command)
@@ -236,7 +237,7 @@ int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	char **argv = NULL;
-	int i, return_status = 0, command_status;
+	int i, status = 0, command_status;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
@@ -244,6 +245,7 @@ int main(int ac, char **av, char **environ)
 	signal(SIGINT, sigint_handler);
 	while (1)
 	{
+		status = 0;
 		if (interactive)
 		{
 			i = 0;
@@ -260,14 +262,15 @@ int main(int ac, char **av, char **environ)
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
 				free(argv), argv = NULL;
-				/*When the user enters "exit" as a command, the shell should exit with a return status of 0 to indicate successful termination*/
-				return_status = 0;
+				/*When the user enters "exit" as a command, the shell should exit*/
+				/*with a return status of 0 to indicate successful termination*/
+				status = 0;
 				break;
 			}
 			command_status = myfork(argv, av, environ);
 			if (command_status != 0)
 			{
-				return_status = command_status;
+				status = command_status;
 			}
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
@@ -275,5 +278,5 @@ int main(int ac, char **av, char **environ)
 		}
 		free(lineptr), lineptr = NULL;
 	}
-	return (return_status);
+	return (status);
 }
