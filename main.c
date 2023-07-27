@@ -140,6 +140,8 @@ char *_which(char **env, char *command)
 
 				if (stat(buffer, &statbuf) == 0)
 				{
+					for (j = 0; paths[j]; j++)
+						free(paths[j]);
 					free(paths), paths = NULL;
 					return (buffer);
 				}
@@ -147,6 +149,8 @@ char *_which(char **env, char *command)
 				buffer = NULL;
 			}
 		}
+		for (i = 0; paths[i]; i++)
+			free(paths[i]);
 		free(paths), paths = NULL;
 	}
 	return (NULL);
