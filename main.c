@@ -11,7 +11,7 @@ void get_user_input(void);
 char **my_strtok(const char *delim, char *buffer);
 int is_valid_command(const char *command);
 char *_which(char **env, char *command);
-void myfork(char **argv, char **av, char **environ);
+int myfork(char **argv, char **av, char **environ);
 /**
  * sigint_handler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
@@ -179,7 +179,7 @@ int is_valid_command(const char *command)
  *
  * Return: 1 (failure)
  */
-void myfork(char **argv, char **av, char **environ)
+int myfork(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
 	int status;
@@ -189,7 +189,7 @@ void myfork(char **argv, char **av, char **environ)
 	child_pid = fork();
 	if (child_pid == -1)
 	{
-		return;
+		return (1);
 	}
 	else if (child_pid == 0)
 	{	/* Child process: Search for the executable in 'PATH' if necessary */
@@ -199,6 +199,8 @@ void myfork(char **argv, char **av, char **environ)
 			if (!path)
 			{
 				free(path);
+				/*Return 127 if the command is not found*/
+				exit(127);
 			}
 		}
 		if (path)
@@ -208,14 +210,19 @@ void myfork(char **argv, char **av, char **environ)
 		}
 		/* Child process: Execute the command using execve */
 		if (execve(argv[0], argv, environ) == -1)
+		{
 			perror(av[0]);
+			exit(126);
+		}
 		free(path);
 	}
 	else
 	{
 		/* Parent process: Wait for the child process to finish */
 		wait(&status);
+		return (WEXITSTATUS(status));
 	}
+	return (0);
 }
 
 /**
@@ -229,7 +236,7 @@ int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	char **argv = NULL;
-	int i;
+	int i, return_status = 0, command_status;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
@@ -253,14 +260,20 @@ int main(int ac, char **av, char **environ)
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
 				free(argv), argv = NULL;
+				/*When the user enters "exit" as a command, the shell should exit with a return status of 0 to indicate successful termination*/
+				return_status = 0;
 				break;
 			}
-			myfork(argv, av, environ);
+			command_status = myfork(argv, av, environ);
+			if (command_status != 0)
+			{
+				return_status = command_status;
+			}
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
 			free(argv), argv = NULL;
 		}
 		free(lineptr), lineptr = NULL;
 	}
-	return (0);
+	return (return_status);
 }

@@ -14,5 +14,4 @@
 
 char *lineptr = NULL;
 int _putchar(char c);
-void myfork(char **argv, char **av, char **environ);
 #endif /*_SIMPLE_SHELL_H*/
