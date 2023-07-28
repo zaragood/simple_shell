@@ -187,6 +187,22 @@ void myfork(char **argv, char **av, char **environ)
         char *path = NULL;
         struct stat statbuf;
 
+	/* fork should not be call if command does not exist*/
+	if (stat(argv[0], &statbuf) != 0)
+	{
+		path = _which(environ, argv[0]);
+		 if (!path)
+		 {
+			 perror(argv[0]);
+			 return;
+		 }
+	}
+	if (path)
+	{
+		free(argv[0]);
+		argv[0] = path;
+	}
+
         child_pid = fork();
         if (child_pid == -1)
         {
@@ -194,7 +210,7 @@ void myfork(char **argv, char **av, char **environ)
         }
         else if (child_pid == 0)
         {       /* Child process: Search for the executable in 'PATH' if necessary */
-                if (stat(argv[0], &statbuf) != 0)
+                /*if (stat(argv[0], &statbuf) != 0)
                 {
                         path = _which(environ, argv[0]);
                         if (!path)
@@ -206,7 +222,7 @@ void myfork(char **argv, char **av, char **environ)
                 {
                         free(argv[0]);
                         argv[0] = path;
-                }
+                }*/
                 /* Child process: Execute the command using execve */
                 if (execve(argv[0], argv, environ) == -1)
                 {
@@ -235,7 +251,6 @@ int main(int ac, char **av, char **environ)
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
-	/*signal(SIGINT, SIG_IGN);*/
 	signal(SIGINT, sigint_handler);
 	while (1)
 	{
@@ -252,15 +267,14 @@ int main(int ac, char **av, char **environ)
 		argv = my_strtok(" ", lineptr);
 		if (argv != NULL)
 		{
-			/*if (strcmp(argv[0], "exit") == 0)
+			if (strcmp(argv[0], "exit") == 0)
 			{
 				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
 				free(argv), argv = NULL;
-				status = 0;
 				break;
-			}*/
+			}
 			/*command_status = myfork(argv, av, environ);
 			if (command_status != 0)
 			{
