@@ -11,7 +11,7 @@ void get_user_input(void);
 char **my_strtok(const char *delim, char *buffer);
 int is_valid_command(const char *command);
 char *_which(char **env, char *command);
-void myfork(char **argv, char **av, char **environ);
+int myfork(char **argv, char **av, char **environ);
 /**
  * sigint_handler - Signal handler for SIGINT (Ctrl+C).
  * @sig: The signal number received (unused).
@@ -180,7 +180,7 @@ int is_valid_command(const char *command)
  *
  * Return: 1 (failure)
  */
-void myfork(char **argv, char **av, char **environ)
+int myfork(char **argv, char **av, char **environ)
 {
 	pid_t child_pid;
 	int status;
@@ -193,8 +193,8 @@ void myfork(char **argv, char **av, char **environ)
 		path = _which(environ, argv[0]);
 		if (!path)
 		{
-			perror(argv[0]);
-			return;
+			dprintf(2, "%s: %d: %s: not found\n", av[0], 1, argv[0]);
+			return (127);
 		}
 	}
 	if (path)
@@ -206,21 +206,28 @@ void myfork(char **argv, char **av, char **environ)
 	child_pid = fork();
 	if (child_pid == -1)
 	{
-		return;
+		return (1);
 	}
 	else if (child_pid == 0)
 	{
 		/* Child process: Search for the executable in 'PATH' if necessary */
 		if (execve(argv[0], argv, environ) == -1)
 		{
-			perror(av[0]);
+			perror(argv[0]);
+			exit(2);
 		}
 	}
 	else
 	{
 		/* Parent process: Wait for the child process to finish */
 		wait(&status);
+		if (WIFEXITED(status))
+			return (WEXITSTATUS(status));
+		else
+			return (1);
+
 	}
+	return (0);
 }
 
 /**
@@ -234,7 +241,7 @@ int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
 	char **argv = NULL;
-	int i;
+	int i, status = 0;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
@@ -262,7 +269,11 @@ int main(int ac, char **av, char **environ)
 				free(argv), argv = NULL;
 				break;
 			}
-			myfork(argv, av, environ);
+			status = myfork(argv, av, environ);
+			if (status == 127)
+			{
+				dprintf(2, "%s: %d: %s: not found\n", av[0], 1, argv[0]);
+			}
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
 			free(argv), argv = NULL;
@@ -271,5 +282,5 @@ int main(int ac, char **av, char **environ)
 		}
 	}
 	free(lineptr), lineptr = NULL;
-	return (0);
+	return (status);
 }

@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <ctype.h>
+#include <errno.h>
 
 char *lineptr = NULL;
 int _putchar(char c);
