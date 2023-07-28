@@ -240,8 +240,9 @@ int myfork(char **argv, char **av, char **environ)
 int main(int ac, char **av, char **environ)
 {
 	char *prompt = "#simple_shell$ ";
-	char **argv = NULL;
+	char **argv = NULL, *endptr;
 	int i, status = 0;
+	long exit_status;
 	bool interactive = isatty(fileno(stdin));
 	(void) ac;
 
@@ -265,7 +266,17 @@ int main(int ac, char **av, char **environ)
 			{
 				if (argv[1])
 				{
-					status = atoi(argv[1]);
+					errno = 0;
+					exit_status = strtol(argv[1], &endptr, 10);
+					if (errno != 0 || *endptr != '\0')
+					{
+						dprintf(2, "%s: %d: exit: Illegal number: %s\n", av[0], 1, argv[1]);
+						status = 2;
+					}
+					else
+					{
+						status = (int)exit_status;
+					}
 				}
 				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
@@ -277,6 +288,7 @@ int main(int ac, char **av, char **environ)
 			if (status == 127)
 			{
 				dprintf(2, "%s: %d: %s: not found\n", av[0], 1, argv[0]);
+				status = 2;
 			}
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
