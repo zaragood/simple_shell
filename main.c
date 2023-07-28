@@ -268,7 +268,7 @@ int main(int ac, char **av, char **environ)
 				{
 					errno = 0;
 					exit_status = strtol(argv[1], &endptr, 10);
-					if (errno != 0 || *endptr != '\0')
+					if (errno != 0 || *endptr != '\0' || exit_status < 0 || exit_status > 255)
 					{
 						dprintf(2, "%s: %d: exit: Illegal number: %s\n", av[0], 1, argv[1]);
 						status = 2;
