@@ -182,20 +182,20 @@ int is_valid_command(const char *command)
  */
 void myfork(char **argv, char **av, char **environ)
 {
-        pid_t child_pid;
-        int status;
-        char *path = NULL;
-        struct stat statbuf;
+	pid_t child_pid;
+	int status;
+	char *path = NULL;
+	struct stat statbuf;
 
 	/* fork should not be call if command does not exist*/
 	if (stat(argv[0], &statbuf) != 0)
 	{
 		path = _which(environ, argv[0]);
-		 if (!path)
-		 {
-			 perror(argv[0]);
-			 return;
-		 }
+		if (!path)
+		{
+			perror(argv[0]);
+			return;
+		}
 	}
 	if (path)
 	{
@@ -203,37 +203,24 @@ void myfork(char **argv, char **av, char **environ)
 		argv[0] = path;
 	}
 
-        child_pid = fork();
-        if (child_pid == -1)
-        {
-                return;
-        }
-        else if (child_pid == 0)
-        {       /* Child process: Search for the executable in 'PATH' if necessary */
-                /*if (stat(argv[0], &statbuf) != 0)
-                {
-                        path = _which(environ, argv[0]);
-                        if (!path)
-                        {
-				return;
-                        }
-                }
-                if (path)
-                {
-                        free(argv[0]);
-                        argv[0] = path;
-                }*/
-                /* Child process: Execute the command using execve */
-                if (execve(argv[0], argv, environ) == -1)
-                {
-                        perror(av[0]);
-                }
-        }
-        else
-        {
-                /* Parent process: Wait for the child process to finish */
-                wait(&status);
-        }
+	child_pid = fork();
+	if (child_pid == -1)
+	{
+		return;
+	}
+	else if (child_pid == 0)
+	{
+		/* Child process: Search for the executable in 'PATH' if necessary */
+		if (execve(argv[0], argv, environ) == -1)
+		{
+			perror(av[0]);
+		}
+	}
+	else
+	{
+		/* Parent process: Wait for the child process to finish */
+		wait(&status);
+	}
 }
 
 /**
@@ -275,11 +262,6 @@ int main(int ac, char **av, char **environ)
 				free(argv), argv = NULL;
 				break;
 			}
-			/*command_status = myfork(argv, av, environ);
-			if (command_status != 0)
-			{
-				status = command_status;
-			}*/
 			myfork(argv, av, environ);
 			for (i = 0; argv[i]; i++)
 				free(argv[i]), argv[i] = NULL;
@@ -287,8 +269,6 @@ int main(int ac, char **av, char **environ)
 		}
 		free(lineptr), lineptr = NULL;
 		}
-		/*if (!interactive)
-			break;*/
 	}
 	free(lineptr), lineptr = NULL;
 	return (0);
