@@ -263,6 +263,10 @@ int main(int ac, char **av, char **environ)
 		{
 			if (strcmp(argv[0], "exit") == 0)
 			{
+				if (argv[1])
+				{
+					status = atoi(argv[1]);
+				}
 				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
 					free(argv[i]), argv[i] = NULL;
