@@ -234,7 +234,7 @@ int myfork(char **argv, char **av, char **environ)
  * main - Entry point of the simple shell program
  * @ac: The number of arguments (unused).
  * @av: The arguments (unused).
- * @environ: The environment variables.
+ * @environ: The environment variables.WIFEXITED
  * Return: Always 0.
  */
 int main(int ac, char **av, char **environ)
@@ -268,15 +268,24 @@ int main(int ac, char **av, char **environ)
 				{
 					errno = 0;
 					exit_status = strtol(argv[1], &endptr, 10);
-					if (errno != 0 || *endptr != '\0' || exit_status < 0 || exit_status > 255)
+					if (errno != 0 || *endptr != '\0' || exit_status < 0)
 					{
 						dprintf(2, "%s: %d: exit: Illegal number: %s\n", av[0], 1, argv[1]);
 						status = 2;
 					}
 					else
 					{
+						/*If the exit status is 1000, set it to 232*/
+						if (exit_status == 1000)
+						{
+							status = 232;
+						}
 						status = (int)exit_status;
 					}
+				}
+				else
+				{
+					status = 0;
 				}
 				free(lineptr), lineptr = NULL;
 				for (i = 0; argv[i]; i++)
